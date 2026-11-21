@@ -37,11 +37,14 @@ def research(name, meeting_dt, context = ""):
     start, end = get_window(meeting_dt)
     seen_urls = set()
     findings = []
-    
-    for label, query in build_queries(name, context):
+    queries = build_queries(name, context)
+    failed = 0
+
+    for label, query in queries:
         try:
             results = search_one(query, start, end)
         except Exception as e:
+            failed += 1
             print(f"Search Failed for {query}: {e}")
             continue
         for r in results:
@@ -57,6 +60,10 @@ def research(name, meeting_dt, context = ""):
                 "snippet" : r["content"],
                 "found_by" : label,
             })
+
+    if failed == len(queries):
+        raise RuntimeError("Could not reach the Tavily search service. Check your internet connection and try again.")
+
     return findings
 
 if __name__ == "__main__":
